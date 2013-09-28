@@ -20,6 +20,9 @@ NSMutableArray* ya;
 NSMutableArray* za;
 
 
+#define SAMPS_PER_SEC (10)
+#define TIME_PER_SAMP (1.0/SAMPS_PER_SEC)
+
 
 - (void)didReceiveMemoryWarning
 {
@@ -51,14 +54,19 @@ NSMutableArray* za;
     currentMaxRotY = 0;
     currentMaxRotZ = 0;
     
+    NSLog(@"Sample every %f", TIME_PER_SAMP );
+    
     self.motionManager = [[CMMotionManager alloc] init];
-    self.motionManager.accelerometerUpdateInterval = .2;
-    self.motionManager.gyroUpdateInterval = .2;
+    self.motionManager.accelerometerUpdateInterval = TIME_PER_SAMP;
+    self.motionManager.gyroUpdateInterval = TIME_PER_SAMP;
     
     [self.motionManager startAccelerometerUpdatesToQueue:[NSOperationQueue currentQueue]
                                              withHandler:^(CMAccelerometerData  *accelerometerData, NSError *error) {
                                                  [self queueData:accelerometerData.acceleration];
                                                  [self outputAccelertionData:accelerometerData.acceleration];
+                                                 
+                                                 [self parseData];
+                                                 
                                                  if(error){
                                                      
                                                      NSLog(@"%@", error);
@@ -83,12 +91,62 @@ NSMutableArray* za;
                                    }];
 }
 
+- (void) purgeAll
+{
+    [self purgeArray:xa];
+    [self purgeArray:ya];
+    [self purgeArray:za];
+}
+
+- (void) rollBuffer
+{
+    while( [xa count] > 1 )
+    {
+        
+    }
+}
+
 
 -(void)queueData:(CMAcceleration)data
 {
     [xa enqueue:[NSNumber numberWithDouble:data.x]];
     [ya enqueue:[NSNumber numberWithDouble:data.y]];
     [za enqueue:[NSNumber numberWithDouble:data.z]];
+}
+
+-(void) parseData
+{
+    [self isResting];
+}
+
+- (void) isResting
+{
+    //
+    double tol = 0.01;
+    
+    bool flag = true;
+    
+    for( int i = 0; i < [xa count]; i++ )
+    {
+        if( i == 0 ) continue;
+        
+        
+        double x = [[xa objectAtIndex:i] doubleValue];
+         double xprev = [[xa objectAtIndex:(i-1)] doubleValue];
+        
+        
+//        NSLog(@"%d - %@\n", i, [xa objectAtIndex:i]);
+        
+        if( x - xprev > tol)
+        {
+            NSLog(@"not resting at sample %d\n", i);
+            flag = false;
+            break;
+        }
+    }
+    
+    if( flag )
+        NSLog(@"resting");
 }
 
 - (IBAction)buttonOne:(id)sender
@@ -101,9 +159,11 @@ NSMutableArray* za;
         NSLog(@"%@", cobj);
     }
     
-    [self purgeArray:xa];
+//    [self purgeArray:xa];
+    [self purgeAll];
     
 }
+
 
 
 -(void)outputAccelertionData:(CMAcceleration)acceleration
