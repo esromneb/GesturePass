@@ -23,7 +23,6 @@ NSMutableArray* za;
 #define SAMPS_PER_SEC (10)
 #define TIME_PER_SAMP (1.0/SAMPS_PER_SEC)
 
-
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
@@ -66,6 +65,7 @@ NSMutableArray* za;
                                                  [self outputAccelertionData:accelerometerData.acceleration];
                                                  
                                                  [self parseData];
+                                                 [self rollBuffer];
                                                  
                                                  if(error){
                                                      
@@ -100,9 +100,14 @@ NSMutableArray* za;
 
 - (void) rollBuffer
 {
-    while( [xa count] > 1 )
+    
+    // buffer for 1 second
+    
+    while( [xa count] > SAMPS_PER_SEC )
     {
-        
+        [xa dequeue];
+        [ya dequeue];
+        [za dequeue];
     }
 }
 
@@ -122,22 +127,31 @@ NSMutableArray* za;
 - (void) isResting
 {
     //
-    double tol = 0.01;
+    double tol = 0.06;
     
     bool flag = true;
     
-    for( int i = 0; i < [xa count]; i++ )
+    int samples = (SAMPS_PER_SEC/2);
+    
+    int end = ([xa count]-1);
+    
+    // loop for N samples but be careful not to underflow array
+    for( int i = end; i >= 0 && (end - i) < samples ; i-- )
     {
         if( i == 0 ) continue;
         
         
         double x = [[xa objectAtIndex:i] doubleValue];
-         double xprev = [[xa objectAtIndex:(i-1)] doubleValue];
+        double xprev = [[xa objectAtIndex:(i-1)] doubleValue];
+        double y = [[ya objectAtIndex:i] doubleValue];
+        double yprev = [[ya objectAtIndex:(i-1)] doubleValue];
+        double z = [[za objectAtIndex:i] doubleValue];
+        double zprev = [[za objectAtIndex:(i-1)] doubleValue];
         
         
 //        NSLog(@"%d - %@\n", i, [xa objectAtIndex:i]);
         
-        if( x - xprev > tol)
+        if( (fabs(x - xprev) > tol) || (fabs(y - yprev) > tol) || (fabs(z - zprev) > tol))
         {
             NSLog(@"not resting at sample %d\n", i);
             flag = false;
