@@ -7,12 +7,18 @@
 //
 
 #import "ViewController.h"
+#import "NSMutableArray+QueueAdditions.h"
 
 @interface ViewController ()
 
 @end
 
 @implementation ViewController
+
+NSMutableArray* xa;
+NSMutableArray* ya;
+NSMutableArray* za;
+
 
 
 - (void)didReceiveMemoryWarning
@@ -29,6 +35,13 @@
     
     
     [super viewDidLoad];
+    
+    
+    xa = [[NSMutableArray alloc] init];
+    ya = [[NSMutableArray alloc] init];
+    za = [[NSMutableArray alloc] init];
+    
+    
     // Do any additional setup after loading the view, typically from a nib.
     currentMaxAccelX = 0;
     currentMaxAccelY = 0;
@@ -44,6 +57,7 @@
     
     [self.motionManager startAccelerometerUpdatesToQueue:[NSOperationQueue currentQueue]
                                              withHandler:^(CMAccelerometerData  *accelerometerData, NSError *error) {
+                                                 [self queueData:accelerometerData.acceleration];
                                                  [self outputAccelertionData:accelerometerData.acceleration];
                                                  if(error){
                                                      
@@ -60,6 +74,36 @@
     
 }
 
+-(void) purgeArray:(NSMutableArray*)array
+{
+//    NSMutableArray *array = [[rows objectForKey:self.company.coaTypeCode] objectForKey:statementType];
+    [[array copy] enumerateObjectsWithOptions: NSEnumerationReverse
+                                   usingBlock:^(id coaItem, NSUInteger idx, BOOL *stop) {
+                                           [array removeObjectAtIndex:idx];
+                                   }];
+}
+
+
+-(void)queueData:(CMAcceleration)data
+{
+    [xa enqueue:[NSNumber numberWithDouble:data.x]];
+    [ya enqueue:[NSNumber numberWithDouble:data.y]];
+    [za enqueue:[NSNumber numberWithDouble:data.z]];
+}
+
+- (IBAction)buttonOne:(id)sender
+{
+    
+    NSLog(@"hi");
+    NSEnumerator *arrenum = [xa objectEnumerator];
+    id cobj;
+    while ( cobj = [arrenum nextObject] ) {
+        NSLog(@"%@", cobj);
+    }
+    
+    [self purgeArray:xa];
+    
+}
 
 
 -(void)outputAccelertionData:(CMAcceleration)acceleration

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		17B2A4F117F7926300A8F3EF /* NSMutableArray+QueueAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 17B2A4F017F7926300A8F3EF /* NSMutableArray+QueueAdditions.m */; };
 		1F05590917F7802900800DC6 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F05590817F7802900800DC6 /* Foundation.framework */; };
 		1F05590B17F7802900800DC6 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F05590A17F7802900800DC6 /* CoreGraphics.framework */; };
 		1F05590D17F7802900800DC6 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F05590C17F7802900800DC6 /* UIKit.framework */; };
@@ -34,6 +35,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		17B2A4EF17F7926300A8F3EF /* NSMutableArray+QueueAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSMutableArray+QueueAdditions.h"; sourceTree = "<group>"; };
+		17B2A4F017F7926300A8F3EF /* NSMutableArray+QueueAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSMutableArray+QueueAdditions.m"; sourceTree = "<group>"; };
 		1F05590517F7802900800DC6 /* GesturePass.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GesturePass.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F05590817F7802900800DC6 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		1F05590A17F7802900800DC6 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -112,6 +115,8 @@
 		1F05590E17F7802900800DC6 /* GesturePass */ = {
 			isa = PBXGroup;
 			children = (
+				17B2A4EF17F7926300A8F3EF /* NSMutableArray+QueueAdditions.h */,
+				17B2A4F017F7926300A8F3EF /* NSMutableArray+QueueAdditions.m */,
 				1F05591717F7802900800DC6 /* AppDelegate.h */,
 				1F05591817F7802900800DC6 /* AppDelegate.m */,
 				1F05591A17F7802900800DC6 /* Main.storyboard */,
@@ -252,6 +257,7 @@
 				1F05591F17F7802900800DC6 /* ViewController.m in Sources */,
 				1F05591917F7802900800DC6 /* AppDelegate.m in Sources */,
 				1F05591517F7802900800DC6 /* main.m in Sources */,
+				17B2A4F117F7926300A8F3EF /* NSMutableArray+QueueAdditions.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -460,6 +466,7 @@
 				1F05593917F7802900800DC6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		1F05593A17F7802900800DC6 /* Build configuration list for PBXNativeTarget "GesturePassTests" */ = {
 			isa = XCConfigurationList;
@@ -468,6 +475,7 @@
 				1F05593C17F7802900800DC6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

@@ -44,6 +44,8 @@ double currentMaxRotZ;
 
 - (IBAction)resetMaxValues:(id)sender;
 
+- (IBAction)buttonOne:(id)sender;
+
 @property (strong, nonatomic) CMMotionManager *motionManager;
 
 
