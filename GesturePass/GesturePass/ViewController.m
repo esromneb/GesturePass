@@ -63,6 +63,17 @@ int gestureBegin;
     self.motionManager.accelerometerUpdateInterval = TIME_PER_SAMP;
     self.motionManager.gyroUpdateInterval = TIME_PER_SAMP;
     
+    [self purgeAll];
+    
+    [self dloadFromString:@"[[-0.1491546630859375,0.0045166015625,-1.002761840820312],[-0.074981689453125,-0.031463623046875,-1.007522583007812],[-0.1234130859375,-0.0959930419921875,-0.996978759765625],[-0.0950927734375,-0.0718994140625,-1.06475830078125],[0.0121307373046875,-0.0360870361328125,-1.011520385742188],[0.0989837646484375,-0.011505126953125,-1.017120361328125],[0.0713958740234375,-0.0031890869140625,-0.9982147216796875],[0.1243896484375,-0.0173797607421875,-0.9828338623046875],[-0.009521484375,-0.0137786865234375,-0.99188232421875],[0.0247344970703125,0.0011138916015625,-0.994384765625],[0.0088043212890625,-0.037017822265625,-0.99774169921875],[0.007232666015625,-0.041595458984375,-0.9970245361328125],[0.0104827880859375,-0.0368194580078125,-0.996551513671875]]"];
+    
+    
+    
+    [self dprintWithStart:0 end:[xa count]];
+    
+    
+    exit(0);
+    
     [self.motionManager startAccelerometerUpdatesToQueue:[NSOperationQueue currentQueue]
                                              withHandler:^(CMAccelerometerData  *accelerometerData, NSError *error) {
                                                  [self queueData:accelerometerData.acceleration];
@@ -167,6 +178,31 @@ int gestureBegin;
     NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
     
     NSLog(@"%@", jsonString );
+}
+
+- (void) dloadFromString:(NSString*)s
+{
+    NSArray *loaded =  [NSJSONSerialization
+                                      JSONObjectWithData:[s dataUsingEncoding:NSUTF8StringEncoding]
+                                      options:kNilOptions
+                                      error:NULL];
+    
+    for( int i = 0; i < [loaded count]; i++ )
+    {
+        NSArray* row = [loaded objectAtIndex:i];
+        [xa enqueue:[row objectAtIndex:0]];
+        [ya enqueue:[row objectAtIndex:1]];
+        [za enqueue:[row objectAtIndex:2]];
+//        [ya enqueue:[NSNumber numberWithDouble:[row objectAtIndex:1]]];
+//        [za enqueue:[NSNumber numberWithDouble:[row objectAtIndex:2]] ];
+    }
+    
+    NSLog(@"load?");
+}
+
+- (void) detectX
+{
+    
 }
 
 - (void) isResting
