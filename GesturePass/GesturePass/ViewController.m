@@ -193,7 +193,7 @@ int gestureBegin;
         [self windowWithStart:gestureBegin+(num*2/3) end:end];
         
         
-        NSLog(@"entering rest");
+        NSLog(@"entering rest with %d samples", num);
     }
     
     if( gcopy != gestureHappening && gcopy == false)
