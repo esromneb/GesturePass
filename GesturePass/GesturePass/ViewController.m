@@ -239,15 +239,7 @@ int gestureBegin;
 - (int) detectWithStart:(int)start end:(int)end dir:(int)dir
 {
     double signalTol = 0.25;
-//    double noiseTol = 0.3;
     double tolRadio = 1.5;
-//    double gx,gy,gz;
-//    gx = 0;
-//    gy = 0;
-//    gz = -1;
-    
-//    double ix,iy,iz;
-//    ix = iy = iz = 0;
     
     // cumulitive
     double cx,cy,cz;
@@ -270,16 +262,6 @@ int gestureBegin;
         
         if( i != start )
         {
-//            switch( dir )
-//            {
-//                case XDIR:
-//                    break;
-//                case YDIR:
-//                    break;
-//                default:
-//                case ZDIR:
-//                    break;
-//            }
             switch( dir )
             {
                 case XDIR:
