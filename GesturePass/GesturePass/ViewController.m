@@ -326,11 +326,15 @@ int gestureBegin;
     
     int end = ([xa count]-1);
     
+    int restCount = 0;
+    
     // loop for N samples but be careful not to underflow array
     for( int i = end; i >= 0 && (end - i) < samples ; i-- )
     {
         if( i == 0 ) continue;
         
+        
+
         
         double x = [[xa objectAtIndex:i] doubleValue];
         double xprev = [[xa objectAtIndex:(i-1)] doubleValue];
@@ -352,14 +356,34 @@ int gestureBegin;
                 gestureBegin = i;
             
             flag = false;
+            gestureHappening = !flag;
             break;
         }
+        else
+        {
+            restCount += 2;
+        }
+        
+        if( restCount > 3 )
+        {
+            gestureHappening = false;
+            break;
+        }
+        
+        
+        
+        
+        
+        restCount--;
     }
     
 //    if( flag )
 //        NSLog(@"resting");
     
-    gestureHappening = !flag;
+    // set into resting
+//    gestureHappening = false;
+    
+//    gestureHappening = !flag;
 }
 
 - (IBAction)buttonOne:(id)sender
