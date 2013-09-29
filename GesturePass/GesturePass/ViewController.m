@@ -21,6 +21,9 @@ NSMutableArray* za;
 bool gestureHappening;
 int gestureBegin;
 
+#define XDIR (0x1)
+#define YDIR (0x2)
+#define ZDIR (0x4)
 
 #define SAMPS_PER_SEC (10)
 #define TIME_PER_SAMP (1.0/SAMPS_PER_SEC)
@@ -142,6 +145,8 @@ int gestureBegin;
     [za enqueue:[NSNumber numberWithDouble:data.z]];
 }
 
+#define POSNEG(x) (x>=0)?@"positive":@"negative"
+
 -(void) parseData
 {
     bool gcopy = gestureHappening;
@@ -154,7 +159,25 @@ int gestureBegin;
 //        self dprint:][xa count] - gestureBegin, [xa count]-1);
 //        [self dprintWithStart:gestureBegin end:[xa count]-1];
         
-        [self detectXWithStart:gestureBegin end:[xa count]-1];
+        
+        int xdetect, ydetect, zdetect;
+        
+        xdetect = [self detectWithStart:gestureBegin end:([xa count]-1) dir:XDIR];
+        ydetect = [self detectWithStart:gestureBegin end:([xa count]-1) dir:YDIR];
+        zdetect = [self detectWithStart:gestureBegin end:([xa count]-1) dir:ZDIR];
+        
+        if( xdetect != 0 )
+            NSLog(@"detect %@ x gesture\n", POSNEG(xdetect) );
+        
+        if( ydetect != 0 )
+            NSLog(@"detect %@ y gesture\n", POSNEG(ydetect) );
+        
+        if( zdetect != 0 )
+            NSLog(@"detect %@ z gesture\n", POSNEG(zdetect) );
+        
+        if( ((int)(xdetect != 0) + (int)(ydetect != 0) + (int)(zdetect != 0)) > 1 )
+            NSLog(@"ZOMG multiple directions detected!!!!!");
+
         
     }
 }
@@ -213,22 +236,28 @@ int gestureBegin;
 // http://stackoverflow.com/questions/3377288/how-to-remove-gravity-factor-from-accelerometer-readings-in-android-3-axis-accel
 #define UPDATE_G(g,v) g = 0.9 * g + 0.1 * v;
 
-- (void) detectXWithStart:(int)start end:(int)end
+- (int) detectWithStart:(int)start end:(int)end dir:(int)dir
 {
-    double signalTol = 0.55;
-    double noiseTol = 0.3;
-    double tolRadio = 3.0;
-    double gx,gy,gz;
-    gx = 0;
-    gy = 0;
-    gz = -1;
+    double signalTol = 0.25;
+//    double noiseTol = 0.3;
+    double tolRadio = 1.5;
+//    double gx,gy,gz;
+//    gx = 0;
+//    gy = 0;
+//    gz = -1;
     
-    double ix,iy,iz;
-    ix = iy = iz = 0;
+//    double ix,iy,iz;
+//    ix = iy = iz = 0;
     
+    // cumulitive
     double cx,cy,cz;
     
+    // direction
+    double posneg = 0;
+    
     cx = cy = cz = 0;
+    
+    bool detect = false;
     
     
     double xprev, yprev, zprev;
@@ -239,35 +268,69 @@ int gestureBegin;
         double y = [[ya objectAtIndex:i] doubleValue];
         double z = [[za objectAtIndex:i] doubleValue];
         
-        
-        UPDATE_G(gx,x);
-        UPDATE_G(gy,y);
-        UPDATE_G(gz,z);
-        
-        x -= gx;
-        y -= gy;
-        z -= gz;
-        
-        ix += x;
-        iy += y;
-        iz += z;
-        
         if( i != start )
         {
+//            switch( dir )
+//            {
+//                case XDIR:
+//                    break;
+//                case YDIR:
+//                    break;
+//                default:
+//                case ZDIR:
+//                    break;
+//            }
+            switch( dir )
+            {
+                case XDIR:
+                    posneg += (x - xprev);
+                    break;
+                case YDIR:
+                    posneg += (y - yprev);
+                    break;
+                default:
+                case ZDIR:
+                    posneg += (z - zprev);
+                    break;
+            }
+            
             cx += fabs(x - xprev);
             cy += fabs(y - yprev);
             cz += fabs(z - zprev);
             
-            NSLog(@"%f %f %f\n", cx/cy, cx/cz, 0.0);
+//            NSLog(@"sum: %f %f %f\n", cx, cy, cz);
+//            NSLog(@"rat: %f %f %f\n", cx/cy, cx/cz, 0.0);
         }
         
         xprev = x;
         yprev = y;
         zprev = z;
     }
+
+//    NSLog(@"\nr1: %d \nr2: %d \ncx: %d",(cx/cy > tolRadio),(cx/cz > tolRadio), (cx > signalTol));
     
-    if( cx/cy > tolRadio && cx/cz > tolRadio && cx > signalTol )
-        NSLog(@"X gesture");
+    
+    switch( dir )
+    {
+        case XDIR:
+            detect = (cx/cy > tolRadio && cx/cz > tolRadio && cx > signalTol);
+            break;
+        case YDIR:
+            detect = (cy/cx > tolRadio && cy/cz > tolRadio && cy > signalTol);
+            break;
+        default:
+        case ZDIR:
+            detect = (cz/cx > tolRadio && cz/cy > tolRadio && cz > signalTol);
+            break;
+    }
+    
+    if( detect && posneg >= 0.0 )
+        return 1;
+    
+    if( detect && posneg < 0.0 )
+        return -1;
+    
+    return 0;
 }
 
 - (void) isResting
