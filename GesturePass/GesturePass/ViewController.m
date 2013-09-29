@@ -25,7 +25,7 @@ int gestureBegin;
 #define YDIR (0x2)
 #define ZDIR (0x4)
 
-#define SAMPS_PER_SEC (10)
+#define SAMPS_PER_SEC (50)
 #define TIME_PER_SAMP (1.0/SAMPS_PER_SEC)
 
 - (void)didReceiveMemoryWarning
@@ -143,9 +143,31 @@ int gestureBegin;
     [xa enqueue:[NSNumber numberWithDouble:data.x]];
     [ya enqueue:[NSNumber numberWithDouble:data.y]];
     [za enqueue:[NSNumber numberWithDouble:data.z]];
+//    NSLog(@"x: %f", data.x);
 }
 
 #define POSNEG(x) (x>=0)?@"positive":@"negative"
+
+-(void) windowWithStart:(int)start end:(int)end
+{
+    int xdetect, ydetect, zdetect;
+    
+    xdetect = [self detectWithStart:start end:end dir:XDIR];
+    ydetect = [self detectWithStart:start end:end dir:YDIR];
+    zdetect = [self detectWithStart:start end:end dir:ZDIR];
+    
+    if( xdetect != 0 )
+        NSLog(@"detect %@ x gesture\n", POSNEG(xdetect) );
+    
+    if( ydetect != 0 )
+        NSLog(@"detect %@ y gesture\n", POSNEG(ydetect) );
+    
+    if( zdetect != 0 )
+        NSLog(@"detect %@ z gesture\n", POSNEG(zdetect) );
+    
+    if( ((int)(xdetect != 0) + (int)(ydetect != 0) + (int)(zdetect != 0)) > 1 )
+        NSLog(@"ZOMG multiple directions detected!!!!!");
+}
 
 -(void) parseData
 {
@@ -153,33 +175,29 @@ int gestureBegin;
     
     [self isResting];
     
+    // if we just started resting after a gesture
     if( gcopy != gestureHappening && gestureHappening == false)
     {
-        NSLog(@"END of gesture with lenght %d\n", [xa count] - gestureBegin );
+//        NSLog(@"END of gesture with lenght %d\n", [xa count] - gestureBegin );
 //        self dprint:][xa count] - gestureBegin, [xa count]-1);
 //        [self dprintWithStart:gestureBegin end:[xa count]-1];
         
         
-        int xdetect, ydetect, zdetect;
+        int end = ([xa count]-1) - (SAMPS_PER_SEC/2);
         
-        xdetect = [self detectWithStart:gestureBegin end:([xa count]-1) dir:XDIR];
-        ydetect = [self detectWithStart:gestureBegin end:([xa count]-1) dir:YDIR];
-        zdetect = [self detectWithStart:gestureBegin end:([xa count]-1) dir:ZDIR];
+        int num = end - gestureBegin;
         
-        if( xdetect != 0 )
-            NSLog(@"detect %@ x gesture\n", POSNEG(xdetect) );
         
-        if( ydetect != 0 )
-            NSLog(@"detect %@ y gesture\n", POSNEG(ydetect) );
+        [self windowWithStart:gestureBegin end:gestureBegin+(num/3)];
+        [self windowWithStart:gestureBegin+(num/3) end:gestureBegin+(num*2/3)];
+        [self windowWithStart:gestureBegin+(num*2/3) end:end];
         
-        if( zdetect != 0 )
-            NSLog(@"detect %@ z gesture\n", POSNEG(zdetect) );
         
-        if( ((int)(xdetect != 0) + (int)(ydetect != 0) + (int)(zdetect != 0)) > 1 )
-            NSLog(@"ZOMG multiple directions detected!!!!!");
-
-        
+        NSLog(@"entering rest");
     }
+    
+    if( gcopy != gestureHappening && gcopy == false)
+        NSLog(@"leaving rest");
 }
 
 - (void) dprintWithStart:(int)start end:(int)end
@@ -238,8 +256,8 @@ int gestureBegin;
 
 - (int) detectWithStart:(int)start end:(int)end dir:(int)dir
 {
-    double signalTol = 0.25;
-    double tolRadio = 1.5;
+    double signalTol = 0;
+    double tolRadio = 1.01;
     
     // cumulitive
     double cx,cy,cz;
@@ -288,8 +306,12 @@ int gestureBegin;
         yprev = y;
         zprev = z;
     }
-
+//    if( dir == XDIR )
+//    {
+//
 //    NSLog(@"\nr1: %d \nr2: %d \ncx: %d",(cx/cy > tolRadio),(cx/cz > tolRadio), (cx > signalTol));
+//        
+//    }
     
     
     switch( dir )
@@ -318,11 +340,14 @@ int gestureBegin;
 - (void) isResting
 {
     //
-    double tol = 0.06;
+    double tol = 0.03;
     
+    // is resting
     bool flag = true;
     
-    int samples = (SAMPS_PER_SEC/2);
+    int samples = (SAMPS_PER_SEC*2.0/3);
+    
+    int restSamples = SAMPS_PER_SEC/2;
     
     int end = ([xa count]-1);
     
@@ -331,7 +356,8 @@ int gestureBegin;
     // loop for N samples but be careful not to underflow array
     for( int i = end; i >= 0 && (end - i) < samples ; i-- )
     {
-        if( i == 0 ) continue;
+        if( i == end ) continue;
+        if( (i - 1) < 0 ) continue; // edge condition on boot
         
         
 
@@ -364,7 +390,7 @@ int gestureBegin;
             restCount += 2;
         }
         
-        if( restCount > 3 )
+        if( restCount > restSamples )
         {
             gestureHappening = false;
             break;
