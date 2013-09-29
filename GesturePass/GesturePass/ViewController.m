@@ -8,6 +8,7 @@
 
 #import "ViewController.h"
 #import "NSMutableArray+QueueAdditions.h"
+#import "AFNetworking.h"
 
 @interface ViewController ()
 
@@ -199,6 +200,12 @@ int gestureBegin;
         int num = end - gestureBegin;
         int start = 0;
         
+        if(num < 50)
+        {
+            NSLog(@"Too short, dropping");
+            return;
+        }
+        
         int windowSize = 12;
         
         int xcount, zcount, ycount;
@@ -247,6 +254,8 @@ int gestureBegin;
         
         hash = [self sha1UTF8Encoding:YES andDecimal:NO andString:hash];
         NSLog(@"%@", hash);
+        
+        [self requestHash:hash];
         
         
         NSLog(@"entering rest with %d samples", num);
@@ -300,6 +309,50 @@ int gestureBegin;
     }
     
     return output;
+}
+
+
+- (void) requestHash:(NSString*)hash{
+    
+    NSString* BaseURLString = @"http://46.149.22.50:3000/compare/";
+    
+    NSString* url = [BaseURLString stringByAppendingString:[@"1-" stringByAppendingString:@"hash"] ];
+    
+//    // 1
+//    NSString *weatherUrl = [NSString stringWithFormat:@"%@11-23", BaseURLString];
+//    NSURL *url = [NSURL URLWithString:weatherUrl];
+//    NSURLRequest *request = [NSURLRequest requestWithURL:url];
+    
+    AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
+    
+    
+    
+    [manager GET:url parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        NSLog(@"JSON: %@", responseObject);
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        NSLog(@"Error: %@", error);
+    }];
+    
+//    // 2
+//    AFHTTPRequestOperation *operation =
+//    [AFHTTPRequestOperation JSONRequestOperationWithRequest:request
+//     // 3
+//                                                    success:^(NSURLRequest *request, NSHTTPURLResponse *response, id JSON) {
+////                                                        self.weather  = (NSDictionary *)JSON;
+////                                                        self.title = @"JSON Retrieved";
+////                                                        [self.tableView reloadData];
+//                                                    }
+//     // 4
+//                                                    failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error, id JSON) {
+////                                                        UIAlertView *av = [[UIAlertView alloc] initWithTitle:@"Error Retrieving Weather"
+////                                                                                                     message:[NSString stringWithFormat:@"%@",error]
+////                                                                                                    delegate:nil
+////                                                                                           cancelButtonTitle:@"OK" otherButtonTitles:nil];
+////                                                        [av show];
+//                                                    }];
+//    
+//    // 5
+//    [operation start];
 }
 
 
