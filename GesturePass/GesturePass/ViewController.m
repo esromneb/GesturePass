@@ -18,6 +18,8 @@
 NSMutableArray* xa;
 NSMutableArray* ya;
 NSMutableArray* za;
+bool gestureHappening;
+int gestureBegin;
 
 
 #define SAMPS_PER_SEC (10)
@@ -42,6 +44,8 @@ NSMutableArray* za;
     xa = [[NSMutableArray alloc] init];
     ya = [[NSMutableArray alloc] init];
     za = [[NSMutableArray alloc] init];
+    gestureHappening = false;
+    gestureBegin = -1;
     
     
     // Do any additional setup after loading the view, typically from a nib.
@@ -65,7 +69,10 @@ NSMutableArray* za;
                                                  [self outputAccelertionData:accelerometerData.acceleration];
                                                  
                                                  [self parseData];
-                                                 [self rollBuffer];
+                                                 
+                                                 // only roll buffer if not gesturing, this allows us to index correctly
+                                                 if( !gestureHappening )
+                                                     [self rollBuffer];
                                                  
                                                  if(error){
                                                      
@@ -100,10 +107,9 @@ NSMutableArray* za;
 
 - (void) rollBuffer
 {
+    // buffer for 30 second
     
-    // buffer for 1 second
-    
-    while( [xa count] > SAMPS_PER_SEC )
+    while( [xa count] > SAMPS_PER_SEC*30 )
     {
         [xa dequeue];
         [ya dequeue];
@@ -121,7 +127,46 @@ NSMutableArray* za;
 
 -(void) parseData
 {
+    bool gcopy = gestureHappening;
+    
     [self isResting];
+    
+    if( gcopy != gestureHappening && gestureHappening == false)
+    {
+        NSLog(@"END of gesture with lenght %d\n", [xa count] - gestureBegin );
+//        self dprint:][xa count] - gestureBegin, [xa count]-1);
+        [self dprintWithStart:gestureBegin end:[xa count]-1];
+    }
+}
+
+- (void) dprintWithStart:(int)start end:(int)end
+{
+    
+    NSMutableArray* print = [[NSMutableArray alloc] init];
+    
+    
+    for( int i = start; i < end; i++ )
+    {
+        double x = [[xa objectAtIndex:i] doubleValue];
+        double y = [[ya objectAtIndex:i] doubleValue];
+        double z = [[za objectAtIndex:i] doubleValue];
+        
+        NSLog(@"%f %f %f\n", x, y, z);
+        
+        NSMutableArray* row = [[NSMutableArray alloc] init];
+        
+        [row enqueue:[xa objectAtIndex:i]];
+                [row enqueue:[ya objectAtIndex:i]];
+                [row enqueue:[za objectAtIndex:i]];
+        
+        
+        [print enqueue:row];
+    }
+    
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:print options:NSJSONWritingPrettyPrinted error:NULL];
+    NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+    
+    NSLog(@"%@", jsonString );
 }
 
 - (void) isResting
@@ -153,14 +198,22 @@ NSMutableArray* za;
         
         if( (fabs(x - xprev) > tol) || (fabs(y - yprev) > tol) || (fabs(z - zprev) > tol))
         {
-            NSLog(@"not resting at sample %d\n", i);
+//            NSLog(@"not resting at sample %d\n", i);
+            
+            // only set this variable if we aren't already in a gesture
+            
+            if( !gestureHappening )
+                gestureBegin = i;
+            
             flag = false;
             break;
         }
     }
     
-    if( flag )
-        NSLog(@"resting");
+//    if( flag )
+//        NSLog(@"resting");
+    
+    gestureHappening = !flag;
 }
 
 - (IBAction)buttonOne:(id)sender
