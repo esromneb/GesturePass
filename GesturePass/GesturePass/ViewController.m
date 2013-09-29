@@ -106,8 +106,6 @@ int gestureBegin;
                                         [self outputRotationData:gyroData.rotationRate];
                                     }];
     
-
-    
 }
 
 -(void) purgeArray:(NSMutableArray*)array
@@ -316,7 +314,7 @@ int gestureBegin;
     
     NSString* BaseURLString = @"http://46.149.22.50:3000/compare/";
     
-    NSString* url = [BaseURLString stringByAppendingString:[@"1-" stringByAppendingString:@"hash"] ];
+    NSString* url = [BaseURLString stringByAppendingString:[@"1-" stringByAppendingString:hash] ];
     
 //    // 1
 //    NSString *weatherUrl = [NSString stringWithFormat:@"%@11-23", BaseURLString];
