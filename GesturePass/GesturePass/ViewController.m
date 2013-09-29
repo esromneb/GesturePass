@@ -221,15 +221,32 @@ int gestureBegin;
                 zcount++;
         }
         
+        
+        NSString* hash;
+        
+//        hash = [self sha1UTF8Encoding:true andDecima:true andString:@"x"];
+        
         if( xcount > ycount && xcount > zcount )
+        {
             NSLog(@"x");
+            hash = @"x";
+        }
         
         if( ycount > zcount && ycount > xcount )
+        {
             NSLog(@"y");
+            hash = @"y";
+        }
         
         if( zcount > ycount && zcount > xcount )
+        {
             NSLog(@"z");
+            hash = @"z";
+        }
         
+        
+        hash = [self sha1UTF8Encoding:YES andDecimal:NO andString:hash];
+        NSLog(@"%@", hash);
         
         
         NSLog(@"entering rest with %d samples", num);
@@ -238,6 +255,54 @@ int gestureBegin;
     if( gcopy != gestureHappening && gcopy == false)
         NSLog(@"leaving rest");
 }
+
+
+//- (NSString*) hashIt:(NSString*)it
+//{
+//    // Create an SHA1 instance, update it with a string and do final.
+//    SHA1 sha1 = [SHA1 sha1WithString:it];
+//    
+//    // Get the pointer of the internal buffer that holds the message digest value.
+//    // The life of the internal buffer ends when the SHA1 instance is discarded.
+//    // Copy the buffer as necessary. The size of the buffer can be obtained by
+//    // 'bufferSize' method.
+//    unsigned char *digestAsBytes = [sha1 buffer];
+//    
+//    // Get the string expression of the message digest value.
+//    NSString *digestAsString = [sha1 description];
+//}
+
+
+#define CC_SHA1_DIGEST_LENGTH (20)
+
+- (NSString*) sha1UTF8Encoding:(BOOL)utf8 andDecimal:(BOOL)decimal andString:(NSString*)s
+{
+    const char *cstr;
+    if (utf8) {
+        cstr = [s cStringUsingEncoding:NSUTF8StringEncoding];
+    }else{
+        cstr = [s cStringUsingEncoding:NSUnicodeStringEncoding];
+    }
+    NSData *data = [NSData dataWithBytes:cstr length:s.length];
+    
+    uint8_t digest[CC_SHA1_DIGEST_LENGTH];
+    
+    CC_SHA1(data.bytes, data.length, digest);
+    
+    NSMutableString* output = [NSMutableString stringWithCapacity:CC_SHA1_DIGEST_LENGTH * 2];
+    
+    for(int i = 0; i < CC_SHA1_DIGEST_LENGTH; i++){
+        if (decimal) {
+            [output appendFormat:@"%i", digest[i]];
+        }else{
+            [output appendFormat:@"%02x", digest[i]];
+        }
+    }
+    
+    return output;
+}
+
+
 
 - (void) dprintWithStart:(int)start end:(int)end
 {
