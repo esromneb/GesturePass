@@ -148,7 +148,7 @@ int gestureBegin;
 
 #define POSNEG(x) (x>=0)?@"positive":@"negative"
 
--(void) windowWithStart:(int)start end:(int)end
+-(int) windowWithStart:(int)start end:(int)end
 {
     int xdetect, ydetect, zdetect;
     
@@ -157,16 +157,27 @@ int gestureBegin;
     zdetect = [self detectWithStart:start end:end dir:ZDIR];
     
     if( xdetect != 0 )
+    {
         NSLog(@"detect %@ x gesture\n", POSNEG(xdetect) );
+        return XDIR;
+    }
     
     if( ydetect != 0 )
+    {
         NSLog(@"detect %@ y gesture\n", POSNEG(ydetect) );
+        return YDIR;
+    }
     
     if( zdetect != 0 )
+    {
         NSLog(@"detect %@ z gesture\n", POSNEG(zdetect) );
+        return ZDIR;
+    }
     
     if( ((int)(xdetect != 0) + (int)(ydetect != 0) + (int)(zdetect != 0)) > 1 )
         NSLog(@"ZOMG multiple directions detected!!!!!");
+    
+    return ZDIR;
 }
 
 -(void) parseData
@@ -183,14 +194,42 @@ int gestureBegin;
 //        [self dprintWithStart:gestureBegin end:[xa count]-1];
         
         
-        int end = ([xa count]-1) - (SAMPS_PER_SEC/2);
+        int end = ([xa count]-1);
         
         int num = end - gestureBegin;
+        int start = 0;
         
+        int windowSize = 12;
         
-        [self windowWithStart:gestureBegin end:gestureBegin+(num/3)];
-        [self windowWithStart:gestureBegin+(num/3) end:gestureBegin+(num*2/3)];
-        [self windowWithStart:gestureBegin+(num*2/3) end:end];
+        int xcount, zcount, ycount;
+        xcount = ycount = zcount = 0;
+        
+        for( int i = 0; (i+1)*windowSize  < num; i++ )
+        {
+            
+            start = gestureBegin + i*windowSize;
+            
+            int result = [self windowWithStart:start end:start+windowSize];
+
+            if( result == XDIR )
+                xcount++;
+            
+            if( result == YDIR )
+                ycount++;
+            
+            if( result == ZDIR )
+                zcount++;
+        }
+        
+        if( xcount > ycount && xcount > zcount )
+            NSLog(@"x");
+        
+        if( ycount > zcount && ycount > xcount )
+            NSLog(@"y");
+        
+        if( zcount > ycount && zcount > xcount )
+            NSLog(@"z");
+        
         
         
         NSLog(@"entering rest with %d samples", num);
@@ -340,7 +379,7 @@ int gestureBegin;
 - (void) isResting
 {
     //
-    double tol = 0.03;
+    double tol = 0.04;
     
     // is resting
     bool flag = true;
@@ -379,7 +418,7 @@ int gestureBegin;
             // only set this variable if we aren't already in a gesture
             
             if( !gestureHappening )
-                gestureBegin = i;
+                gestureBegin = abs(i);
             
             flag = false;
             gestureHappening = !flag;
