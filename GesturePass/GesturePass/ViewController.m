@@ -62,17 +62,23 @@ int gestureBegin;
     self.motionManager = [[CMMotionManager alloc] init];
     self.motionManager.accelerometerUpdateInterval = TIME_PER_SAMP;
     self.motionManager.gyroUpdateInterval = TIME_PER_SAMP;
-    
-    [self purgeAll];
-    
-    [self dloadFromString:@"[[-0.1491546630859375,0.0045166015625,-1.002761840820312],[-0.074981689453125,-0.031463623046875,-1.007522583007812],[-0.1234130859375,-0.0959930419921875,-0.996978759765625],[-0.0950927734375,-0.0718994140625,-1.06475830078125],[0.0121307373046875,-0.0360870361328125,-1.011520385742188],[0.0989837646484375,-0.011505126953125,-1.017120361328125],[0.0713958740234375,-0.0031890869140625,-0.9982147216796875],[0.1243896484375,-0.0173797607421875,-0.9828338623046875],[-0.009521484375,-0.0137786865234375,-0.99188232421875],[0.0247344970703125,0.0011138916015625,-0.994384765625],[0.0088043212890625,-0.037017822265625,-0.99774169921875],[0.007232666015625,-0.041595458984375,-0.9970245361328125],[0.0104827880859375,-0.0368194580078125,-0.996551513671875]]"];
-    
-    
-    
-    [self dprintWithStart:0 end:[xa count]];
-    
-    
-    exit(0);
+//    
+//    [self purgeAll];
+//    
+//    [self dloadFromString:@"[[-0.1491546630859375,0.0045166015625,-1.002761840820312],[-0.074981689453125,-0.031463623046875,-1.007522583007812],[-0.1234130859375,-0.0959930419921875,-0.996978759765625],[-0.0950927734375,-0.0718994140625,-1.06475830078125],[0.0121307373046875,-0.0360870361328125,-1.011520385742188],[0.0989837646484375,-0.011505126953125,-1.017120361328125],[0.0713958740234375,-0.0031890869140625,-0.9982147216796875],[0.1243896484375,-0.0173797607421875,-0.9828338623046875],[-0.009521484375,-0.0137786865234375,-0.99188232421875],[0.0247344970703125,0.0011138916015625,-0.994384765625],[0.0088043212890625,-0.037017822265625,-0.99774169921875],[0.007232666015625,-0.041595458984375,-0.9970245361328125],[0.0104827880859375,-0.0368194580078125,-0.996551513671875]]"];
+//    
+//    [self detectXWithStart:0 end:[xa count]];
+////    [self dprintWithStart:0 end:[xa count]];
+//    
+//    
+//    int wait = 999;
+//    while(wait--)
+//    {
+//        int a = wait*2;
+//    }
+//
+//    NSLog(@"aaa\n\n\n");
+//    exit(0);
     
     [self.motionManager startAccelerometerUpdatesToQueue:[NSOperationQueue currentQueue]
                                              withHandler:^(CMAccelerometerData  *accelerometerData, NSError *error) {
@@ -146,7 +152,10 @@ int gestureBegin;
     {
         NSLog(@"END of gesture with lenght %d\n", [xa count] - gestureBegin );
 //        self dprint:][xa count] - gestureBegin, [xa count]-1);
-        [self dprintWithStart:gestureBegin end:[xa count]-1];
+//        [self dprintWithStart:gestureBegin end:[xa count]-1];
+        
+        [self detectXWithStart:gestureBegin end:[xa count]-1];
+        
     }
 }
 
@@ -200,9 +209,65 @@ int gestureBegin;
     NSLog(@"load?");
 }
 
-- (void) detectX
+// function for normalizing gravity
+// http://stackoverflow.com/questions/3377288/how-to-remove-gravity-factor-from-accelerometer-readings-in-android-3-axis-accel
+#define UPDATE_G(g,v) g = 0.9 * g + 0.1 * v;
+
+- (void) detectXWithStart:(int)start end:(int)end
 {
+    double signalTol = 0.55;
+    double noiseTol = 0.3;
+    double tolRadio = 3.0;
+    double gx,gy,gz;
+    gx = 0;
+    gy = 0;
+    gz = -1;
     
+    double ix,iy,iz;
+    ix = iy = iz = 0;
+    
+    double cx,cy,cz;
+    
+    cx = cy = cz = 0;
+    
+    
+    double xprev, yprev, zprev;
+    
+    for( int i = start; i < end; i++ )
+    {
+        double x = [[xa objectAtIndex:i] doubleValue];
+        double y = [[ya objectAtIndex:i] doubleValue];
+        double z = [[za objectAtIndex:i] doubleValue];
+        
+        
+        UPDATE_G(gx,x);
+        UPDATE_G(gy,y);
+        UPDATE_G(gz,z);
+        
+        x -= gx;
+        y -= gy;
+        z -= gz;
+        
+        ix += x;
+        iy += y;
+        iz += z;
+        
+        if( i != start )
+        {
+            cx += fabs(x - xprev);
+            cy += fabs(y - yprev);
+            cz += fabs(z - zprev);
+            
+            NSLog(@"%f %f %f\n", cx/cy, cx/cz, 0.0);
+        }
+        
+        xprev = x;
+        yprev = y;
+        zprev = z;
+    }
+    
+    if( cx/cy > tolRadio && cx/cz > tolRadio && cx > signalTol )
+        NSLog(@"X gesture");
 }
 
 - (void) isResting
